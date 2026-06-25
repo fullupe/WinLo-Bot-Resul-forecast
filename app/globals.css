@@ -1,0 +1,30 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  --color-background: #131313;
+  --color-foreground: #ffffff;
+  --color-muted: #1a1a1a;
+  --color-muted-foreground: #a1a1aa;
+  --color-accent: #262626;
+  --color-accent-foreground: #ffffff;
+  --color-primary: #32a893;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #1a1a1a;
+  --color-secondary-foreground: #ffffff;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #262626;
+  --color-ring: #32a893;
+  --color-sidebar: #131313;
+  --color-sidebar-foreground: #ffffff;
+  --color-sidebar-accent: #1a1a1a;
+  --color-sidebar-accent-foreground: #ffffff;
+  --color-sidebar-border: #262626;
+  --color-sidebar-ring: #32a893;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--color-foreground);
+}
