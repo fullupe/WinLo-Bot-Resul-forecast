@@ -105,7 +105,11 @@ function listGames(games: string[]): string {
   return (
     "🎰 *Available Games*\n" +
     games.map((g, i) => `${i + 1}. ${g}`).join("\n") +
-    "\n\nReply with a number for latest, e.g. `1`\n`1 TODAY` or `1 23-06-2026` for a date\n`F1` for a forecast"
+    "\n\n📌 *How to use:*\n" +
+    "• Latest result: type `1` or `1 latest`\n" +
+    "• Specific date: type `1 23-06-2026`, `1 today`, or `1 yesterday`\n" +
+    "• Forecast: type `F1` or `forecast 1`\n" +
+    "• Show menu again: type `menu`"
   );
 }
 
@@ -179,7 +183,7 @@ function forecast(game: string, rows: Row[]): string {
 export function handleCommand(input: string, rows: Row[]): string {
   const games = getGames(rows);
   const text = input.trim();
-  if (!text) return "Type a game number, e.g. `1`, or `F1` for forecast.";
+  if (!text) return "👋 Welcome! Type `menu` to see available games and commands.";
 
   const up = text.toUpperCase();
   if (["LIST", "HI", "HELLO", "MENU", "START"].includes(up)) {
@@ -190,14 +194,14 @@ export function handleCommand(input: string, rows: Row[]): string {
   const fMatch = up.match(/^(?:F|FORECAST)\s*(.+)$/);
   if (fMatch) {
     const g = resolveGame(fMatch[1], games);
-    if (!g) return `Couldn't find that game. Type \`LIST\` to see all.`;
+    if (!g) return `Couldn't find that game. Type \`menu\` to see all available games.`;
     return forecast(g, rows);
   }
 
   // <game> [date]
   const parts = text.split(/\s+/);
   const g = resolveGame(parts[0], games);
-  if (!g) return `Unknown command. Type \`LIST\` to see games or \`F1\` for a forecast.`;
+  if (!g) return `Unknown command. Type \`menu\` to see games or \`F1\` for a forecast.`;
 
   const gameRows = rows
     .filter((r) => r.game === g)
@@ -210,14 +214,15 @@ export function handleCommand(input: string, rows: Row[]): string {
   if (gameRows.length === 0) return `No results found for *${g}*.`;
 
   if (parts.length >= 2) {
-    const d = parseDateInput(parts.slice(1).join(" "));
-    if (!d) return `Bad date. Use \`${parts[0]} TODAY\` or \`${parts[0]} 23-06-2026\`.`;
+    const dateArg = parts.slice(1).join(" ");
+    const d = parseDateInput(dateArg);
+    if (!d) return `Bad date. Use \`${parts[0]} today\`, \`${parts[0]} yesterday\`, or \`${parts[0]} DD-MM-YYYY\` (e.g. \`${parts[0]} 23-06-2026\`).`;
     const hit = gameRows.find((r) => r.date === d);
-    if (!hit) return `No *${g}* draw on ${d}.`;
+    if (!hit) return `No *${g}* draw found on ${d}.`;
     return `*${g}*\n${formatResult(hit)}`;
   }
 
-  return `*${g}* — Latest\n${formatResult(gameRows[0])}`;
+  return `*${g}* — Latest Result\n${formatResult(gameRows[0])}`;
 }
 
 export function welcomeMessage(games: string[]): string {
@@ -225,6 +230,10 @@ export function welcomeMessage(games: string[]): string {
     "👋 Welcome to *RS Lotto*!\n\n" +
     "🎰 Games loaded:\n" +
     games.map((g, i) => `${i + 1}. ${g}`).join("\n") +
-    "\n\nType `1` for latest, `1 23-06-2026` for a date, `F1` for forecast."
+    "\n\n📌 *Quick commands:*\n" +
+    "• `menu` — show game list\n" +
+    "• `1` — latest result for game #1\n" +
+    "• `1 today` / `1 23-06-2026` — result for a specific date\n" +
+    "• `F1` — forecast for game #1"
   );
 }
