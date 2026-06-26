@@ -106,9 +106,11 @@ function listGames(games: string[]): string {
     "🎰 *Available Games*\n" +
     games.map((g, i) => `${i + 1}. ${g}`).join("\n") +
     "\n\n📌 *How to use:*\n" +
-    "• `1 today` / `1 23-06-2026` — result for a specific date\n" +
-    "• `1 sf` — last 3 results for game #1\n" +
-    "• `F1` — forecast for game #1\n" +
+    "• Latest result: type `1` or `1 latest`\n" +
+    "• Today's result: type `1 today`\n" +
+    "• Specific date: type `1 23-06-2026` (DD-MM-YYYY)\n" +
+    "• Forecast: type `F1` or `forecast 1`\n" +
+    "• Last 3 results: type `SF 1`\n" +
     "• Show menu again: type `menu`"
   );
 }
@@ -183,14 +185,14 @@ function forecast(game: string, rows: Row[]): string {
 export function handleCommand(input: string, rows: Row[]): string {
   const games = getGames(rows);
   const text = input.trim();
-  if (!text) return "👋 Welcome! Type `menu` to see available games and commands, or try `1 sf` for last 3 results.";
+  if (!text) return "👋 Welcome! Type `menu` to see available games and commands, or try `SF 1` for last 3 results.";
 
   const up = text.toUpperCase();
   if (["LIST", "HI", "HELLO", "MENU", "START"].includes(up)) {
     return listGames(games);
   }
 
-  // Forecast: F1, F ABIA, FORECAST 1
+  // Forecast: F1, F ABIA, FORECAST 1 | Self forecast: SF 1
   const fMatch = up.match(/^(?:F|FORECAST)\s*(.+)$/);
   if (fMatch) {
     const g = resolveGame(fMatch[1], games);
@@ -198,10 +200,27 @@ export function handleCommand(input: string, rows: Row[]): string {
     return forecast(g, rows);
   }
 
-  // <game> [date] | <game> sf
+  const sfMatch = up.match(/^SF\s*(.+)$/);
+  if (sfMatch) {
+    const g = resolveGame(sfMatch[1], games);
+    if (!g) return `Couldn't find that game. Type \`menu\` to see all available games.`;
+    const gameRows = rows.filter((r) => r.game === g).sort((a, b) => {
+      const [da, ma, ya] = a.date.split("-").map(Number);
+      const [db, mb, yb] = b.date.split("-").map(Number);
+      return new Date(yb, mb - 1, db).getTime() - new Date(ya, ma - 1, da).getTime();
+    });
+    if (gameRows.length === 0) return `No results found for *${g}*.`;
+    const recent = gameRows.slice(0, 3);
+    return (
+      `*${g}* — Last 3 Results\n\n` +
+      recent.map((r, idx) => `${idx + 1}. *${r.date}*\n${formatResult(r).replace(`📅 ${r.date}\n`, "")}`).join("\n\n")
+    );
+  }
+
+  // <game> [date]
   const parts = text.split(/\s+/);
   const g = resolveGame(parts[0], games);
-  if (!g) return `Unknown command. Type \`menu\` to see games, \`F1\` for forecast, or \`1 sf\` for last 3 results.`;
+  if (!g) return `Unknown command. Type \`menu\` to see games, \`F1\` for forecast, or \`SF 1\` for last 3 results.`;
 
   const gameRows = rows
     .filter((r) => r.game === g)
@@ -215,13 +234,6 @@ export function handleCommand(input: string, rows: Row[]): string {
 
   if (parts.length >= 2) {
     const dateArg = parts.slice(1).join(" ");
-    if (dateArg.toUpperCase() === "SF") {
-      const recent = gameRows.slice(0, 3);
-      return (
-        `*${g}* — Last 3 Results\n\n` +
-        recent.map((r, idx) => `${idx + 1}. *${r.date}*\n${formatResult(r).replace(`📅 ${r.date}\n`, "")}`).join("\n\n")
-      );
-    }
     const d = parseDateInput(dateArg);
     if (!d) return `Bad date. Use \`${parts[0]} today\`, \`${parts[0]} yesterday\`, or \`${parts[0]} DD-MM-YYYY\` (e.g. \`${parts[0]} 23-06-2026\`).`;
     const hit = gameRows.find((r) => r.date === d);
@@ -240,8 +252,9 @@ export function welcomeMessage(games: string[]): string {
     "\n\n📌 *Quick commands:*\n" +
     "• `menu` — show game list\n" +
     "• `1` — latest result for game #1\n" +
-    "• `1 today` / `1 23-06-2026` — result for a specific date\n" +
-    "• `1 sf` — last 3 results for game #1\n" +
+    "• `1 today` — result for TODAY\n" +
+    "• `1 23-06-2026` — result for a specific date\n" +
+    "• `SF 1` — last 3 results for game #1\n" +
     "• `F1` — forecast for game #1"
   );
 }
