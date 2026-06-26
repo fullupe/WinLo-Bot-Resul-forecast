@@ -23,7 +23,7 @@ function Home() {
           <div className="h-24 w-24 rounded-3xl bg-[#32a893] grid place-items-center shadow-2xl shadow-[#32a893]/40">
             <span className="text-4xl font-black text-white tracking-tight">RS</span>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">WiLo Forecast</h1>
+          <h1 className="text-3xl font-bold tracking-tight">WinLo Forecast</h1>
           <p className="text-sm text-[#a1a1aa]">Results • Forecasts • Fast</p>
         </div>
 
