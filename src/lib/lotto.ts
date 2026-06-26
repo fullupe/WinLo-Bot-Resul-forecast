@@ -106,9 +106,9 @@ function listGames(games: string[]): string {
     "🎰 *Available Games*\n" +
     games.map((g, i) => `${i + 1}. ${g}`).join("\n") +
     "\n\n📌 *How to use:*\n" +
-    "• Latest result: type `1` or `1 latest`\n" +
-    "• Specific date: type `1 23-06-2026`, `1 today`, or `1 yesterday`\n" +
-    "• Forecast: type `F1` or `forecast 1`\n" +
+    "• `1 today` / `1 23-06-2026` — result for a specific date\n" +
+    "• `1 sf` — last 3 results for game #1\n" +
+    "• `F1` — forecast for game #1\n" +
     "• Show menu again: type `menu`"
   );
 }
@@ -183,7 +183,7 @@ function forecast(game: string, rows: Row[]): string {
 export function handleCommand(input: string, rows: Row[]): string {
   const games = getGames(rows);
   const text = input.trim();
-  if (!text) return "👋 Welcome! Type `menu` to see available games and commands.";
+  if (!text) return "👋 Welcome! Type `menu` to see available games and commands, or try `1 sf` for last 3 results.";
 
   const up = text.toUpperCase();
   if (["LIST", "HI", "HELLO", "MENU", "START"].includes(up)) {
@@ -198,10 +198,10 @@ export function handleCommand(input: string, rows: Row[]): string {
     return forecast(g, rows);
   }
 
-  // <game> [date]
+  // <game> [date] | <game> sf
   const parts = text.split(/\s+/);
   const g = resolveGame(parts[0], games);
-  if (!g) return `Unknown command. Type \`menu\` to see games or \`F1\` for a forecast.`;
+  if (!g) return `Unknown command. Type \`menu\` to see games, \`F1\` for forecast, or \`1 sf\` for last 3 results.`;
 
   const gameRows = rows
     .filter((r) => r.game === g)
@@ -215,6 +215,13 @@ export function handleCommand(input: string, rows: Row[]): string {
 
   if (parts.length >= 2) {
     const dateArg = parts.slice(1).join(" ");
+    if (dateArg.toUpperCase() === "SF") {
+      const recent = gameRows.slice(0, 3);
+      return (
+        `*${g}* — Last 3 Results\n\n` +
+        recent.map((r, idx) => `${idx + 1}. *${r.date}*\n${formatResult(r).replace(`📅 ${r.date}\n`, "")}`).join("\n\n")
+      );
+    }
     const d = parseDateInput(dateArg);
     if (!d) return `Bad date. Use \`${parts[0]} today\`, \`${parts[0]} yesterday\`, or \`${parts[0]} DD-MM-YYYY\` (e.g. \`${parts[0]} 23-06-2026\`).`;
     const hit = gameRows.find((r) => r.date === d);
@@ -234,6 +241,7 @@ export function welcomeMessage(games: string[]): string {
     "• `menu` — show game list\n" +
     "• `1` — latest result for game #1\n" +
     "• `1 today` / `1 23-06-2026` — result for a specific date\n" +
+    "• `1 sf` — last 3 results for game #1\n" +
     "• `F1` — forecast for game #1"
   );
 }
